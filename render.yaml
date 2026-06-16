@@ -1,0 +1,36 @@
+# Render service config for Build Engine apps.
+# This file lives in the template so future deploys (after the first one
+# created via Render API) auto-detect the same shape.
+#
+# The Build Engine's Deployer also passes equivalent config via Render's API
+# during initial provisioning, so this file is a redundant safety net rather
+# than the source of truth.
+
+services:
+  - type: web
+    name: build-engine-app
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: pnpm install && pnpm build
+    # `pnpm start` runs `node server.js` which (a) binds explicitly on
+    # 0.0.0.0 (Next.js 16's -H flag is broken on Render) and (b) runs
+    # drizzle-kit push at startup so free-tier deploys (where
+    # preDeployCommand is skipped) still get their schema applied.
+    startCommand: pnpm start
+    # Belt-and-suspenders: on paid plans this runs and the in-server
+    # push at startup is a no-op (schema already current). On free
+    # plans Render silently skips this and server.js's push is what
+    # actually applies the schema.
+    preDeployCommand: pnpm install && pnpm exec drizzle-kit push --force
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+
+databases:
+  - name: build-engine-db
+    plan: free

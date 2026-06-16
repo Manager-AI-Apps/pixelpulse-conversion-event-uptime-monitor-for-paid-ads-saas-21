@@ -1,0 +1,648 @@
+{
+  "build_id": "21",
+  "plan_hash_note": "Read-only reference. Translate this into Drizzle code in lib/db/schema.ts.",
+  "tables": [
+    {
+      "name": "user",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "constraints": [
+            "primary key"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "constraints": [
+            "not null",
+            "unique"
+          ]
+        },
+        {
+          "name": "emailVerified",
+          "type": "boolean",
+          "constraints": [
+            "not null",
+            "default false"
+          ]
+        },
+        {
+          "name": "image",
+          "type": "text"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "session",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "constraints": [
+            "primary key"
+          ]
+        },
+        {
+          "name": "userId",
+          "type": "text",
+          "constraints": [
+            "not null",
+            "references user(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "token",
+          "type": "text",
+          "constraints": [
+            "not null",
+            "unique"
+          ]
+        },
+        {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "ipAddress",
+          "type": "text"
+        },
+        {
+          "name": "userAgent",
+          "type": "text"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "constraints": [
+            "primary key"
+          ]
+        },
+        {
+          "name": "userId",
+          "type": "text",
+          "constraints": [
+            "not null",
+            "references user(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "accountId",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "providerId",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "accessToken",
+          "type": "text"
+        },
+        {
+          "name": "refreshToken",
+          "type": "text"
+        },
+        {
+          "name": "idToken",
+          "type": "text"
+        },
+        {
+          "name": "accessTokenExpiresAt",
+          "type": "timestamp"
+        },
+        {
+          "name": "refreshTokenExpiresAt",
+          "type": "timestamp"
+        },
+        {
+          "name": "scope",
+          "type": "text"
+        },
+        {
+          "name": "password",
+          "type": "text"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "verification",
+      "columns": [
+        {
+          "name": "id",
+          "type": "text",
+          "constraints": [
+            "primary key"
+          ]
+        },
+        {
+          "name": "identifier",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "property",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": [
+            "primary key",
+            "default gen_random_uuid()"
+          ]
+        },
+        {
+          "name": "userId",
+          "type": "text",
+          "constraints": [
+            "not null",
+            "references user(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "domain",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "snippetKey",
+          "type": "text",
+          "constraints": [
+            "not null",
+            "unique"
+          ]
+        },
+        {
+          "name": "ga4MeasurementId",
+          "type": "text"
+        },
+        {
+          "name": "metaPixelId",
+          "type": "text"
+        },
+        {
+          "name": "slackWebhookEncrypted",
+          "type": "text"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        },
+        {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "property_userId_idx",
+          "columns": [
+            "userId"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "funnel",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": [
+            "primary key",
+            "default gen_random_uuid()"
+          ]
+        },
+        {
+          "name": "propertyId",
+          "type": "uuid",
+          "constraints": [
+            "not null",
+            "references property(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "intervalMinutes",
+          "type": "integer",
+          "constraints": [
+            "not null",
+            "default 15"
+          ]
+        },
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "constraints": [
+            "not null",
+            "default true"
+          ]
+        },
+        {
+          "name": "lastRunAt",
+          "type": "timestamp"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "funnel_propertyId_idx",
+          "columns": [
+            "propertyId"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "funnel_step",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": [
+            "primary key",
+            "default gen_random_uuid()"
+          ]
+        },
+        {
+          "name": "funnelId",
+          "type": "uuid",
+          "constraints": [
+            "not null",
+            "references funnel(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "stepOrder",
+          "type": "integer",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "url",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "actionType",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "selector",
+          "type": "text"
+        },
+        {
+          "name": "expectedEvents",
+          "type": "jsonb",
+          "constraints": [
+            "not null",
+            "default '[]'"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "funnel_step_funnelId_idx",
+          "columns": [
+            "funnelId"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "monitor_run",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": [
+            "primary key",
+            "default gen_random_uuid()"
+          ]
+        },
+        {
+          "name": "funnelId",
+          "type": "uuid",
+          "constraints": [
+            "not null",
+            "references funnel(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "startedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        },
+        {
+          "name": "finishedAt",
+          "type": "timestamp"
+        },
+        {
+          "name": "rawPayload",
+          "type": "jsonb"
+        },
+        {
+          "name": "diagnosisCodes",
+          "type": "jsonb"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "monitor_run_funnelId_idx",
+          "columns": [
+            "funnelId"
+          ]
+        },
+        {
+          "name": "monitor_run_startedAt_idx",
+          "columns": [
+            "startedAt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "alert",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": [
+            "primary key",
+            "default gen_random_uuid()"
+          ]
+        },
+        {
+          "name": "funnelId",
+          "type": "uuid",
+          "constraints": [
+            "not null",
+            "references funnel(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "runId",
+          "type": "uuid",
+          "constraints": [
+            "not null",
+            "references monitor_run(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "diagnosisCode",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "diagnosisMessage",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "slackSent",
+          "type": "boolean",
+          "constraints": [
+            "not null",
+            "default false"
+          ]
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "alert_funnelId_runId_unique",
+          "columns": [
+            "funnelId",
+            "runId"
+          ],
+          "unique": true
+        },
+        {
+          "name": "alert_funnelId_idx",
+          "columns": [
+            "funnelId"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "beacon_event",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "constraints": [
+            "primary key",
+            "default gen_random_uuid()"
+          ]
+        },
+        {
+          "name": "propertyId",
+          "type": "uuid",
+          "constraints": [
+            "not null",
+            "references property(id) on delete cascade"
+          ]
+        },
+        {
+          "name": "eventName",
+          "type": "text",
+          "constraints": [
+            "not null"
+          ]
+        },
+        {
+          "name": "payload",
+          "type": "jsonb"
+        },
+        {
+          "name": "receivedAt",
+          "type": "timestamp",
+          "constraints": [
+            "not null",
+            "default now()"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "beacon_event_propertyId_idx",
+          "columns": [
+            "propertyId"
+          ]
+        },
+        {
+          "name": "beacon_event_receivedAt_idx",
+          "columns": [
+            "receivedAt"
+          ]
+        }
+      ]
+    }
+  ]
+}

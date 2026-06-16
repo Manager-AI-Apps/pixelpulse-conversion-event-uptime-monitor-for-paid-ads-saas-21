@@ -1,0 +1,213 @@
+/* Build Engine scaffold — per-app design system.
+ *
+ * Tailwind CSS v4 ships its config in CSS via @theme. The semantic shadcn
+ * tokens (--background, --foreground, --card, …) are wired to two layers the
+ * Build Engine rewrites per build:
+ *
+ *   --ds-*     canvas / shape / fonts, from the chosen design ARCHETYPE
+ *              (build_engine/design/archetypes.py, injected by scaffold.py).
+ *   --brand-*  the domain accent, from the Director's BrandPalette.
+ *
+ * The :root fallbacks below are the default archetype, so the template builds
+ * standalone. The Director's font variables (--font-*-src) are set in
+ * app/layout.tsx via next/font and are likewise rewritten per build.
+ */
+
+@import "tailwindcss";
+
+/* Enable class-based dark mode (next-themes toggles `.dark` on <html>). */
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------------- */
+/* Design-system tokens — overwritten per build from the archetype.        */
+/* ---------------------------------------------------------------------- */
+:root {
+  --ds-radius: 0.375rem;
+
+  /* canvas — light */
+  --ds-bg-light: oklch(0.99 0.003 250);
+  --ds-fg-light: oklch(0.20 0.01 250);
+  --ds-card-light: oklch(1 0 0);
+  --ds-muted-light: oklch(0.96 0.008 250);
+  --ds-muted-fg-light: oklch(0.50 0.015 250);
+  --ds-border-light: oklch(0.91 0.008 250);
+
+  /* canvas — dark */
+  --ds-bg-dark: oklch(0.17 0.015 250);
+  --ds-fg-dark: oklch(0.96 0.005 250);
+  --ds-card-dark: oklch(0.21 0.018 250);
+  --ds-muted-dark: oklch(0.27 0.02 250);
+  --ds-muted-fg-dark: oklch(0.72 0.02 250);
+  --ds-border-dark: oklch(0.30 0.02 250);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Brand accent — overwritten per build by the Director's BrandPalette.     */
+/* OKLCH triples kept inside the Critic-enforced legibility window:         */
+/* lightness 0.40-0.70, chroma 0.08-0.18.                                  */
+/* ---------------------------------------------------------------------- */
+:root {
+  --brand-primary: oklch(0.55 0.14 250);
+  --brand-secondary: oklch(0.62 0.12 200);
+  --brand-accent: oklch(0.58 0.14 220);
+  --brand-neutral: oklch(0.58 0.08 250);
+
+  --brand-primary-dark: oklch(0.68 0.14 250);
+  --brand-secondary-dark: oklch(0.70 0.12 200);
+  --brand-accent-dark: oklch(0.70 0.14 220);
+  --brand-neutral-dark: oklch(0.30 0.06 250);
+}
+
+/* ---------------------------------------------------------------------- */
+/* shadcn semantic tokens — light                                          */
+/* ---------------------------------------------------------------------- */
+:root {
+  --background: var(--ds-bg-light);
+  --foreground: var(--ds-fg-light);
+
+  --card: var(--ds-card-light);
+  --card-foreground: var(--ds-fg-light);
+
+  --popover: var(--ds-card-light);
+  --popover-foreground: var(--ds-fg-light);
+
+  --primary: var(--brand-primary);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: var(--ds-muted-light);
+  --secondary-foreground: var(--ds-fg-light);
+
+  --muted: var(--ds-muted-light);
+  --muted-foreground: var(--ds-muted-fg-light);
+
+  --accent: var(--brand-accent);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: var(--ds-border-light);
+  --input: var(--ds-border-light);
+  --ring: var(--brand-primary);
+
+  --radius: var(--ds-radius);
+
+  /* Sidebar (shadcn app shell) wired to the archetype canvas so the shell
+   * matches the app's theme in light and dark. Defined once here; the
+   * referenced semantic tokens switch under .dark, so these follow. */
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+/* ---------------------------------------------------------------------- */
+/* shadcn semantic tokens — dark                                           */
+/* ---------------------------------------------------------------------- */
+.dark {
+  --background: var(--ds-bg-dark);
+  --foreground: var(--ds-fg-dark);
+
+  --card: var(--ds-card-dark);
+  --card-foreground: var(--ds-fg-dark);
+
+  --popover: var(--ds-card-dark);
+  --popover-foreground: var(--ds-fg-dark);
+
+  --primary: var(--brand-primary-dark);
+  --primary-foreground: oklch(0.13 0.01 250);
+
+  --secondary: var(--ds-muted-dark);
+  --secondary-foreground: var(--ds-fg-dark);
+
+  --muted: var(--ds-muted-dark);
+  --muted-foreground: var(--ds-muted-fg-dark);
+
+  --accent: var(--brand-accent-dark);
+  --accent-foreground: oklch(0.13 0.01 250);
+
+  --destructive: oklch(0.65 0.22 27);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  --border: var(--ds-border-dark);
+  --input: var(--ds-border-dark);
+  --ring: var(--brand-primary-dark);
+}
+
+/* ---------------------------------------------------------------------- */
+/* @theme inline — Tailwind v4 design tokens map onto our CSS variables.   */
+/* ---------------------------------------------------------------------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Fonts: --font-*-src are defined in app/layout.tsx via next/font and
+   * rewritten per build from the archetype's font pairing. `font-sans` is the
+   * body face, `font-display` the heading face, `font-mono` for numerics. */
+  --font-sans: var(--font-body-src), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-heading-src), ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-mono-src), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Base typography + utilities                                             */
+/* ---------------------------------------------------------------------- */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numerals for any cell that contains numeric data. shadcn tables,
+ * dashboard stat cards, and currency columns all opt into this. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
