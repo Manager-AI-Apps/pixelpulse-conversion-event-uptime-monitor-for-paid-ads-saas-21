@@ -4,7 +4,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { rateLimit } from "@/lib/rate-limit";
 
 /**
- * Auth gate (Next.js middleware).
+ * Auth gate (Next.js proxy — formerly "middleware").
  *
  * Uses a cookie-PRESENCE check via getSessionCookie (better-auth/cookies)
  * so this file stays edge-safe and never imports pg / Node.js built-ins.
@@ -13,6 +13,10 @@ import { rateLimit } from "@/lib/rate-limit";
  *
  * Adjust PROTECTED_PAGE_PREFIXES, PROTECTED_API_PREFIXES, and
  * config.matcher for this app's routes.
+ *
+ * NOTE: renamed from middleware.ts → proxy.ts per Next.js 16 convention.
+ * The exported function must be named `proxy` (or be a default export) when
+ * the file is named proxy.ts.
  */
 
 /** Page routes that require a signed-in user → redirect to /sign-in. */
@@ -31,7 +35,7 @@ function hasPrefix(pathname: string, prefixes: string[]): boolean {
   );
 }
 
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
   // Rate-limit /api/auth/* — protect against brute-force sign-in attempts.

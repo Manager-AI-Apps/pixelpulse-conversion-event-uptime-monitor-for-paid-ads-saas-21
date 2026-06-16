@@ -9,7 +9,7 @@ vi.mock("@/lib/rate-limit", () => ({
   pruneRateLimits: vi.fn(),
 }));
 
-import { middleware } from "@/middleware";
+import { proxy as middleware } from "@/proxy";
 import { rateLimit } from "@/lib/rate-limit";
 
 /** Build a NextRequest with a fake better-auth session cookie. */
