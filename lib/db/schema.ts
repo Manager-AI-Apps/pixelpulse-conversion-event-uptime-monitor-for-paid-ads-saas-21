@@ -234,6 +234,38 @@ export const alert = pgTable(
 );
 
 /**
+ * snippet_event — a real visitor event sent by the one-line JS snippet
+ * installed on the property owner's site. PII is stripped before persistence.
+ * Distinct from beacon_event (which is tied to synthetic monitor runs).
+ */
+export const snippetEvent = pgTable(
+  "snippet_event",
+  {
+    id: text("id").primaryKey(),
+    propertyId: text("property_id")
+      .notNull()
+      .references(() => property.id, { onDelete: "cascade" }),
+    /** Raw event name from the visitor's browser (e.g. "purchase", "signup"). */
+    eventName: text("event_name").notNull().default("event"),
+    /**
+     * PII-stripped event payload. Keys matching /email|name|phone|card|token/i
+     * are removed before persistence.
+     */
+    payload: jsonb("payload"),
+    capturedAt: timestamp("captured_at", { withTimezone: false })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: false })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("snippet_event_property_id_idx").on(t.propertyId),
+    index("snippet_event_captured_at_idx").on(t.capturedAt),
+  ],
+);
+
+/**
  * beacon_event — a single tracking event captured by the headless browser
  * interceptor during a monitor_run step.
  */
