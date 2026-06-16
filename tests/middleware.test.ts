@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
-// Hoist mocks before module imports resolve
-vi.mock("@/lib/auth", () => ({
-  auth: {
-    api: {
-      getSession: vi.fn(),
-    },
-  },
-}));
-
+// Middleware no longer calls auth.api.getSession — it uses getSessionCookie
+// (better-auth/cookies) for an edge-safe cookie-presence check. We only need
+// to mock rate-limit here; auth mock is not required.
 vi.mock("@/lib/rate-limit", () => ({
   rateLimit: vi.fn().mockReturnValue({ ok: true, remaining: 19, resetAt: 0 }),
   pruneRateLimits: vi.fn(),
 }));
 
 import { middleware } from "@/middleware";
-import { auth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
+
+/** Build a NextRequest with a fake better-auth session cookie. */
+function requestWithSession(url: string): NextRequest {
+  const req = new NextRequest(url);
+  req.cookies.set("better-auth.session_token", "fake-session-token");
+  return req;
+}
 
 describe("middleware auth gate", () => {
   beforeEach(() => {
@@ -26,8 +26,7 @@ describe("middleware auth gate", () => {
   });
 
   it("unauthenticated /dashboard redirects to /sign-in", async () => {
-    vi.mocked(auth.api.getSession).mockResolvedValue(null);
-
+    // No session cookie → cookie-presence check fails → redirect.
     const request = new NextRequest("http://localhost:3000/dashboard");
     const response = await middleware(request);
 
@@ -37,30 +36,9 @@ describe("middleware auth gate", () => {
   });
 
   it("valid session passes through on /dashboard", async () => {
-    vi.mocked(auth.api.getSession).mockResolvedValue({
-      session: {
-        id: "sess-1",
-        userId: "user-1",
-        token: "tok",
-        expiresAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ipAddress: null,
-        userAgent: null,
-      },
-      user: {
-        id: "user-1",
-        email: "test@example.com",
-        name: "Test",
-        emailVerified: false,
-        image: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
-
-    const request = new NextRequest("http://localhost:3000/dashboard");
+    // Cookie present → middleware lets the request through.
+    // Full session validation happens later in the page (Node runtime).
+    const request = requestWithSession("http://localhost:3000/dashboard");
     const response = await middleware(request);
 
     expect(response.status).not.toBe(307);
@@ -68,8 +46,7 @@ describe("middleware auth gate", () => {
   });
 
   it("unauthenticated /properties redirects to /sign-in", async () => {
-    vi.mocked(auth.api.getSession).mockResolvedValue(null);
-
+    // No session cookie → cookie-presence check fails → redirect.
     const request = new NextRequest("http://localhost:3000/properties/123");
     const response = await middleware(request);
 

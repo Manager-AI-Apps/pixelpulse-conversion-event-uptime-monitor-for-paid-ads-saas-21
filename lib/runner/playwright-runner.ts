@@ -153,7 +153,7 @@ type PwModule = {
 async function loadPlaywright(): Promise<PwModule> {
   // Intentionally widened to `string` to block static module resolution.
   const moduleId: string = "playwright-core";
-  const pw = await import(/* @vite-ignore */ moduleId);
+  const pw = await import(/* webpackIgnore: true */ moduleId);
   return pw as unknown as PwModule;
 }
 

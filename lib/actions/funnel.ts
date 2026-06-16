@@ -1,3 +1,5 @@
+"use server";
+
 /**
  * Server-side actions for funnel CRUD and funnel step upsert.
  *
@@ -20,18 +22,11 @@ import { funnel, funnelStep } from "@/lib/db/schema";
 import { ExpectedEventSchema } from "@/lib/types/expected-event";
 
 // ---------------------------------------------------------------------------
-// Re-export the canonical schema so callers import from one place
-// ---------------------------------------------------------------------------
-
-export { ExpectedEventSchema } from "@/lib/types/expected-event";
-export type { ExpectedEvent } from "@/lib/types/expected-event";
-
-// ---------------------------------------------------------------------------
-// Custom error types
+// Custom error types (module-internal — not exported from "use server" file)
 // ---------------------------------------------------------------------------
 
 /** Thrown when the caller does not own the targeted resource. */
-export class AuthorizationError extends Error {
+class AuthorizationError extends Error {
   constructor(message = "Forbidden: you do not own this resource.") {
     super(message);
     this.name = "AuthorizationError";
@@ -39,7 +34,7 @@ export class AuthorizationError extends Error {
 }
 
 /** Thrown when a requested resource does not exist. */
-export class NotFoundError extends Error {
+class NotFoundError extends Error {
   constructor(message = "Resource not found.") {
     super(message);
     this.name = "NotFoundError";

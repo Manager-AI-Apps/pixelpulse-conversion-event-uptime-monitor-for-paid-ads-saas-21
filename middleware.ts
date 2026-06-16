@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { getSessionCookie } from "better-auth/cookies";
 import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Auth gate (Next.js middleware).
  *
- * Calls auth.api.getSession() — NOT a cookie-presence check — so every
- * protected request is validated against the real session store.
- *
- * NOTE: To support the Node.js auth adapter (Drizzle/pg) this middleware
- * must run under the Node.js runtime, not the Edge runtime. The matcher
- * below deliberately excludes /api/auth/* from the session-check path;
- * those routes are rate-limited only.
+ * Uses a cookie-PRESENCE check via getSessionCookie (better-auth/cookies)
+ * so this file stays edge-safe and never imports pg / Node.js built-ins.
+ * The real DB-backed session validation happens inside each page/route handler
+ * (Node runtime) where pg and the Drizzle adapter are safe to use.
  *
  * Adjust PROTECTED_PAGE_PREFIXES, PROTECTED_API_PREFIXES, and
  * config.matcher for this app's routes.
@@ -60,10 +57,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next();
   }
 
-  // Full DB-backed session validation (Node.js runtime required).
-  const session = await auth.api.getSession({ headers: request.headers });
+  // Cookie-presence check — edge-safe, no DB call.
+  // The real session validation happens inside the page/route handler (Node runtime).
+  const sessionCookie = getSessionCookie(request);
 
-  if (!session) {
+  if (!sessionCookie) {
     if (protectedApi) {
       return NextResponse.json(
         { error: { code: "unauthorized", message: "Authentication required." } },
