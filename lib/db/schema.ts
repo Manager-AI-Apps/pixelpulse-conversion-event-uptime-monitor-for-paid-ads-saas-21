@@ -134,6 +134,12 @@ export const funnel = pgTable(
     /** How often (in minutes) to run the monitor. Defaults to 15. */
     scheduleMinutes: integer("schedule_minutes").notNull().default(15),
     enabled: boolean("enabled").notNull().default(true),
+    /**
+     * Timestamp of the last synthetic run for this funnel. NULL when the funnel
+     * has never been executed. Updated by the cron job after each orchestrator
+     * call so the scheduler knows when to trigger the next run.
+     */
+    lastRunAt: timestamp("last_run_at", { withTimezone: false }),
     createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: false }).notNull().defaultNow(),
   },
