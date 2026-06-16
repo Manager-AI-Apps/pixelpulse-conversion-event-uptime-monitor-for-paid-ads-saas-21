@@ -14,6 +14,9 @@
 
 import {
   boolean,
+  index,
+  integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -76,3 +79,169 @@ export const verification = pgTable("verification", {
 // ---------------------------------------------------------------------------
 // App tables — add below this line during schema translation.
 // ---------------------------------------------------------------------------
+
+/**
+ * property — a monitored web property (site) owned by a user.
+ * One property can have multiple funnels (checkout, signup, etc.).
+ */
+export const property = pgTable(
+  "property",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    url: text("url").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: false }).notNull().defaultNow(),
+  },
+  (t) => [index("property_user_id_idx").on(t.userId)],
+);
+
+/**
+ * funnel — a recorded click-path through a property that PixelPulse replays
+ * on a schedule to verify conversion tracking is intact.
+ */
+export const funnel = pgTable(
+  "funnel",
+  {
+    id: text("id").primaryKey(),
+    propertyId: text("property_id")
+      .notNull()
+      .references(() => property.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** How often (in minutes) to run the monitor. Defaults to 15. */
+    scheduleMinutes: integer("schedule_minutes").notNull().default(15),
+    enabled: boolean("enabled").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: false }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("funnel_property_id_idx").on(t.propertyId),
+    index("funnel_user_id_idx").on(t.userId),
+  ],
+);
+
+/**
+ * funnel_step — one ordered step in a funnel, with the URL the headless
+ * browser navigates to and the tracking events expected to fire there.
+ */
+export const funnelStep = pgTable(
+  "funnel_step",
+  {
+    id: text("id").primaryKey(),
+    funnelId: text("funnel_id")
+      .notNull()
+      .references(() => funnel.id, { onDelete: "cascade" }),
+    /** Zero-based ordering index within the funnel. */
+    stepOrder: integer("step_order").notNull(),
+    url: text("url").notNull(),
+    /** Human-readable description of the user action at this step. */
+    action: text("action"),
+    /**
+     * JSON array of ExpectedEvent objects (eventName, currency?, value?,
+     * dedupKey?) asserting which events must fire at this step.
+     */
+    expectedEvents: jsonb("expected_events").notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: false }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("funnel_step_funnel_id_idx").on(t.funnelId),
+    index("funnel_step_order_idx").on(t.funnelId, t.stepOrder),
+  ],
+);
+
+/**
+ * monitor_run — one scheduled or manual synthetic replay of a funnel.
+ * Status progresses: running → passed | failed | error.
+ */
+export const monitorRun = pgTable(
+  "monitor_run",
+  {
+    id: text("id").primaryKey(),
+    funnelId: text("funnel_id")
+      .notNull()
+      .references(() => funnel.id, { onDelete: "cascade" }),
+    /** running | passed | failed | error */
+    status: text("status").notNull().default("running"),
+    startedAt: timestamp("started_at", { withTimezone: false }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: false }),
+    /** Public URL of a failure screenshot, if captured. */
+    screenshotUrl: text("screenshot_url"),
+    /**
+     * Human-readable failure diagnosis, e.g.:
+     * "Purchase fired without value", "CAPI silent fail",
+     * "duplicate via gtag + GTM", "GA4 property mismatch".
+     */
+    diagnosis: text("diagnosis"),
+    createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: false }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("monitor_run_funnel_id_idx").on(t.funnelId),
+    index("monitor_run_status_idx").on(t.status),
+    index("monitor_run_started_at_idx").on(t.startedAt),
+  ],
+);
+
+/**
+ * alert — a notification sent to the founder when a monitor_run finds a
+ * regression (e.g. a Slack message with diagnosis copy).
+ */
+export const alert = pgTable(
+  "alert",
+  {
+    id: text("id").primaryKey(),
+    monitorRunId: text("monitor_run_id")
+      .notNull()
+      .references(() => monitorRun.id, { onDelete: "cascade" }),
+    funnelId: text("funnel_id")
+      .notNull()
+      .references(() => funnel.id, { onDelete: "cascade" }),
+    /** Delivery channel, e.g. "slack". */
+    channel: text("channel").notNull(),
+    /** Full rendered alert message body. */
+    message: text("message").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: false }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("alert_monitor_run_id_idx").on(t.monitorRunId),
+    index("alert_funnel_id_idx").on(t.funnelId),
+  ],
+);
+
+/**
+ * beacon_event — a single tracking event captured by the headless browser
+ * interceptor during a monitor_run step.
+ */
+export const beaconEvent = pgTable(
+  "beacon_event",
+  {
+    id: text("id").primaryKey(),
+    monitorRunId: text("monitor_run_id")
+      .notNull()
+      .references(() => monitorRun.id, { onDelete: "cascade" }),
+    stepId: text("step_id")
+      .notNull()
+      .references(() => funnelStep.id, { onDelete: "cascade" }),
+    /** Tracking source: "ga4" | "meta" | "gads" | "stripe" | "gtm" | other. */
+    source: text("source").notNull(),
+    /** The raw event name as reported by the pixel/SDK. */
+    eventName: text("event_name").notNull(),
+    /** Full raw event payload for debugging. */
+    payload: jsonb("payload"),
+    capturedAt: timestamp("captured_at", { withTimezone: false }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: false }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("beacon_event_monitor_run_id_idx").on(t.monitorRunId),
+    index("beacon_event_step_id_idx").on(t.stepId),
+    index("beacon_event_event_name_idx").on(t.eventName),
+  ],
+);

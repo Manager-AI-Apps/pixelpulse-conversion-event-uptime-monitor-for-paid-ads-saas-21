@@ -12,7 +12,7 @@ services:
     runtime: node
     plan: free
     branch: main
-    buildCommand: pnpm install && pnpm build
+    buildCommand: pnpm install && pnpm build && npx playwright install chromium --with-deps
     # `pnpm start` runs `node server.js` which (a) binds explicitly on
     # 0.0.0.0 (Next.js 16's -H flag is broken on Render) and (b) runs
     # drizzle-kit push at startup so free-tier deploys (where
