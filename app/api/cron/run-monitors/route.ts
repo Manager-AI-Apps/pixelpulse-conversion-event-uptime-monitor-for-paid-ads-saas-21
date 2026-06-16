@@ -22,7 +22,7 @@ import { and, eq, isNull, or, sql, lt } from "drizzle-orm";
 import { db as appDb } from "@/lib/db";
 import type { Database } from "@/lib/db";
 import { funnel, funnelStep, property, beaconEvent } from "@/lib/db/schema";
-import { requireEnv } from "@/lib/env";
+import { optionalEnv } from "@/lib/env";
 import { handleRoute, ApiError } from "@/lib/api-error";
 import {
   runOrchestrator,
@@ -159,10 +159,54 @@ export async function runCronJob(
 // Route handler
 // ---------------------------------------------------------------------------
 
+/**
+ * GET /api/cron/run-monitors
+ *
+ * Read-only probe: validates the auth header and returns basic endpoint info.
+ * Returns 401 if no valid Bearer token is present so the route is discoverable
+ * without leaking job state.
+ */
+export const GET = handleRoute(async (req: NextRequest) => {
+  const secret = optionalEnv("CRON_SECRET");
+
+  // If CRON_SECRET is not configured, treat as unauthorized rather than erroring.
+  if (!secret) {
+    throw new ApiError("unauthorized", "Authorization header required");
+  }
+
+  const authHeader = req.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+  if (!token) {
+    throw new ApiError("unauthorized", "Authorization header required");
+  }
+
+  const secretBuf = Buffer.from(secret, "utf-8");
+  const tokenBuf = Buffer.from(token, "utf-8");
+
+  const isValid =
+    secretBuf.length === tokenBuf.length &&
+    timingSafeEqual(secretBuf, tokenBuf);
+
+  if (!isValid) {
+    throw new ApiError("unauthorized", "Invalid CRON_SECRET");
+  }
+
+  return NextResponse.json({
+    ok: true,
+    description: "PixelPulse cron monitor endpoint. POST to trigger synthetic runs.",
+  });
+});
+
 export const POST = handleRoute(async (req: NextRequest) => {
   // Read CRON_SECRET inside the handler (not at module scope) so a missing
-  // env var surfaces at request time, not at build/boot time.
-  const secret = requireEnv("CRON_SECRET");
+  // env var surfaces at request time, not at build/boot time. If not configured,
+  // return 401 rather than 500 so monitoring probes can detect the endpoint exists.
+  const secret = optionalEnv("CRON_SECRET");
+
+  if (!secret) {
+    throw new ApiError("unauthorized", "Authorization header required");
+  }
 
   // Validate Authorization: Bearer <token> header using timing-safe comparison
   // to prevent timing-based secret enumeration attacks.
